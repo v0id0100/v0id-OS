@@ -108,6 +108,7 @@ timedatectl set-timezone Europe/Madrid
 
 - Now the important and the risky part: **Partitioning disk**:
     - We will do /boot/ partition and assign it 1GB, then the rest of the space in /.
+    - The / will be encrypted with LUKS to be more secure.
     - List the current partitions:
 ```bash
 # See the endpoints
@@ -146,9 +147,31 @@ Command (m for help): w
 
 ---
 
+### Encrypt the partition:
+
+- We will encrypt the / to be more secure:
+```bash
+cryptsetup luksFormat /dev/sdx2 # Important to be NUMBER 2
+```
+
+<h2>I will set "v0id0100" as password, then you could change it with: </h2>
+
+```bash
+sudo cryptsetup luksChangeKey /dev/sdX2 # Important number 2
+```
+
+---
+
 ### Formatting partitions:
 
 **!!! Be careful, at this step, the changes will be permanent !!!**
+
+- Open the encrypted partition:
+```bash
+cryptsetup open /dev/sdx2 cryptroot
+```
+
+- The decrypted partition will be in: /dev/mapper/cryptroot
 
 - Format /boot in FAT32 file system:
 
@@ -160,14 +183,16 @@ fdisk -l
 mkfs.vfat -F 32 /dev/sdx1
 
 # Same with /
-mkfs.ext4 /dev/sdx2
+mkfs.ext4 /dev/mapper/cryptroot
 ```
+
+---
 
 ### Mount the file system:
 
 ```bash
 # Mount / to /mnt:
-mount /dev/sdx2 /mnt
+mount /dev/mapper/cryptroot /mnt
 
 # Create the /boot in /mnt
 mkdir -p /mnt/boot
@@ -211,4 +236,70 @@ genfstab -U /mnt >> /mnt/etc/fstab
 arch-chroot /mnt
 ```
 - !!! Congrats you are now in you terminal !!!
+
+    - Now import your time:
+```bash
+ln -sf /usr/share/zoneinfo/Area/Location /etc/localtime
+
+# Then for hardware clock
+hwclock --systohc
+
+# Start:
+systemctl enable systemd-timesyncd
+```
+
+-   - Language and keyboard on your device:
+        - Edit */etc/locale.gen*:
+        - Now remove the "#" in your desired keyboard and language. Is recomended to keep english because system default language: en_US.UTF-8 UTF-8
+        - Now build the languages:
+```bash
+locale-gen
+```
+-   - Lock in your system language:
+```bash
+# Ex: spanish
+echo "LANG=es_ES.UTF-8" > /etc/locale.conf
+```
+
+-   - Setup your keyboard:
+```bash
+# Ex: Spanish:
+echo "KEYMAP=es" > /etc/vconsole.conf
+```
+
+--- 
+
+### Set you own hostname:
+
+- I will set v0id0100 as default:
+```bash
+echo "v0id0100" > /etc/hostname
+```
+
+- If you want to set your own hostname:
+```bash
+sudo hostnamectl set-hostname YOUR-HOSTNAME
+```
+- Open a new terminal
+
+--- 
+
+### Create your own user:
+
+- This user will be with root permission.
+
+```bash
+useradd -m -G wheel v0id0100 # Choose your own user
+```
+
+- The password will be v0id0100
+
+- If you create a user and want to delete this:
+```bash
+sudo userdel v0id0100
+```
+
+---
+
+### Wheel group has root permissions:
 
