@@ -4,7 +4,7 @@ Before this, the requirements that it had been used for this installation are:
 - x64 bit
 - 4CPU's
 - 4GB RAM
-- 8GB Storage
+- 20GB Storage
 
 ---
 
@@ -31,7 +31,7 @@ archlinux-2026.05.01-x86_64.iso: OK
 
 ### Once booted, it will display the welcome screen giving you the link of [Arch Linux Wiki](https://wiki.archlinux.org/title/Installation_guide). All the procediment will be from there:
 
-![alt text](.image.png)
+![alt text](./images/.image.png)
 
 - Now you configure your keyboard: 
 ```bash
@@ -121,6 +121,9 @@ fdisk /dev/sdx # Your partition name
 
 Command (m for help): g
 
+# Create new partition:
+Command (m for help): n
+
 # Create the table /boot:
 Parition number (1-128, default 1): 1
 First sector (2048-rest, default 2048): 2048
@@ -154,7 +157,7 @@ Command (m for help): w
 cryptsetup luksFormat /dev/sdx2 # Important to be NUMBER 2
 ```
 
-<h2>I will set "v0id0100" as password, then you could change it with: </h2>
+<h2>I will set "vArch" as password, then you could change it with: </h2>
 
 ```bash
 sudo cryptsetup luksChangeKey /dev/sdX2 # Important number 2
@@ -213,7 +216,7 @@ mount /dev/sdx1 /mnt/boot
 # If you have Intel then install intel-ucode 
 # If you have AMD then install: amd-ucode
 
-pacstrap -K /mnt base linux linux-firmware intel-ucode nano vim man-pages man-db bluez-deprecated-tools bluez-utils bluez networkmanager sof-firmware
+pacstrap -K /mnt base linux linux-firmware intel-ucode nano vim man-pages man-db bluez-deprecated-tools bluez-utils bluez networkmanager sof-firmware sudo grub efibootmgr
 ```
 - You are invited you install you own tools, this is only an initial ones.
 
@@ -239,7 +242,7 @@ arch-chroot /mnt
 
     - Now import your time:
 ```bash
-ln -sf /usr/share/zoneinfo/Area/Location /etc/localtime
+ln -sf /usr/share/zoneinfo/Area/Location /etc/localtime #Ex Madrid: /usr/share/zoneinfo/Europe/Madrid 
 
 # Then for hardware clock
 hwclock --systohc
@@ -269,11 +272,26 @@ echo "KEYMAP=es" > /etc/vconsole.conf
 
 --- 
 
+### Encryption password prompt
+- Now we have to tell our system to ask us for the password because if we don't configure that, grub will try to open a vault that is encrypted by LUKS.
+
+- Edit /etc/mkinitcpio.conf and find the "HOOKS=(" line and copy that:
+```txt
+HOOKS=(base udev autodetect modconf kms keyboard keymap consolefont block encrypt filesystems fsck)
+```
+
+- Now that you have successfully copied, cook it:
+```bash
+mkinitcpio -p linux
+```
+
+---
+
 ### Set you own hostname:
 
-- I will set v0id0100 as default:
+- I will set vArch as default:
 ```bash
-echo "v0id0100" > /etc/hostname
+echo "vArch" > /etc/hostname && hostnamectl set-hostname vArch
 ```
 
 - If you want to set your own hostname:
@@ -289,17 +307,92 @@ sudo hostnamectl set-hostname YOUR-HOSTNAME
 - This user will be with root permission.
 
 ```bash
-useradd -m -G wheel v0id0100 # Choose your own user
+useradd -m -G wheel vArch # Choose your own user
 ```
 
-- The password will be v0id0100
+- The password will be vArch:
+```bash
+passwd vArch
+```
 
 - If you create a user and want to delete this:
 ```bash
-sudo userdel v0id0100
+sudo userdel vArch
 ```
 
 ---
 
 ### Wheel group has root permissions:
 
+- Edit sudoers file with *visudo* and remove the "#" at the start of this sentence:
+```txt
+# %wheel ALL=(ALL:ALL) ALL
+```
+
+- Align it to the left, press 1 time "supr"
+
+- Save and exit with ":wq"
+
+---
+
+### Lock the user root:
+
+- You won't need the user root so remove the password:
+```bash
+passwd -l root
+```
+
+---
+
+### Install the GRUB to your motherboard:
+
+- GRUB is the entry to your system, so you have to configure it:
+```bash
+grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
+```
+
+---
+
+### Configure GRUB:
+
+- Now you have to configure GRUB to tell that it has to open the encrypted partition when you select "Arch Linux" in the Grub options.
+
+- This step is very important. You have to set your own UUID disk in the config, to know your UUID, you must type:
+```bash
+blkid
+```
+
+- Exemple output:
+![alt text](./images/.image2.png)
+
+- <h2>You have to set the UUID (NOT THE PARTUUID) of the TYPE "crypto_LUKS", VERY IMPORTANT</h2>
+
+- Edit /etc/default/grub and set the following:
+
+- Example finished:
+![alt text](./images/.image3.png)
+
+- And finally generate your grub:
+```bash
+grub-mkconfig -o /boot/grub/grub.cfg
+```
+
+### The moment of the truth
+
+- Exit the chroot by typing "exit".
+
+- Umount the disk: 
+```bash
+umount -R /mnt
+```
+
+- Reboot:
+```bash
+reboot
+```
+
+- <h2>!!! REMOVE THE PENDRIVE !!!</h2>
+
+### vArch:
+
+- Continue on: [Desktop Customization](desktop-customization.md)

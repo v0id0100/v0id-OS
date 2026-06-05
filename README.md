@@ -1,4 +1,4 @@
-# v0id0100-OS
+# vArch-OS
 
 ### Presenting v0id-OS
 
@@ -10,7 +10,7 @@ Your hostname: [Hostname](step-by-step.md#set-you-own-hostname)
 
 User: [Create your own user](step-by-step.md#create-your-own-user)
 
-### Why v0id0100-OS
+### Why vArch-OS
 
 encrypted, secure
 
