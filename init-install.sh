@@ -96,7 +96,7 @@ fi
 echo "--------------------------------------------------"
 
 # 5. Desktop Customization:
-read -p "Do you want to install the desktop customization (WhiteSur Theme)? (y/n): " answer
+read -p "Do you want to install the desktop customization (WhiteSur Theme & Icons)? (y/n): " answer
 
 if [[ "$answer" == "y" ]]; then
     echo "Installing desktop environment customizations..."
@@ -104,6 +104,14 @@ if [[ "$answer" == "y" ]]; then
     # Set a fallback global theme first
     plasma-apply-lookandfeel -a org.kde.breezedark.desktop
 
+    # --- 1. Install WhiteSur Icons (Fixes the "Icon theme not found" error) ---
+    echo "Downloading WhiteSur Icon Theme..."
+    git clone https://github.com/vinceliuice/WhiteSur-icon-theme.git /tmp/WhiteSur-icon-theme
+    cd /tmp/WhiteSur-icon-theme
+    echo "Installing WhiteSur icons..."
+    ./install.sh
+    
+    # --- 2. Install WhiteSur KDE Desktop Theme ---
     echo "Downloading WhiteSur Apple Theme..."
     git clone https://github.com/vinceliuice/WhiteSur-kde.git /tmp/WhiteSur-kde
     cd /tmp/WhiteSur-kde
@@ -116,21 +124,30 @@ if [[ "$answer" == "y" ]]; then
 
     echo "Applying WhiteSur Dark Global Theme..."
     plasma-apply-lookandfeel -a com.github.vinceliuice.WhiteSur-dark --resetLayout
-
-    # Configure Kvantum (for application styles matching WhiteSur)
-    echo "Configuring Kvantum application style..."
-    mkdir -p ~/.config/Kvantum
-    cp -r /tmp/WhiteSur-kde/Kvantum/WhiteSur* ~/.config/Kvantum/
+    plasma-apply-colorscheme WhiteSurDark
     
-    # Use kvantummanager CLI to set the theme
-    kvantummanager --set WhiteSur-dark
+    # --- 3. Headless Kvantum Configuration (No GUI popups!) ---
+    echo "Configuring Kvantum application style cleanly..."
+    mkdir -p ~/.config/Kvantum
+    
+    # Directly write to the config file so no GUI opens
+    cat <<EOF > ~/.config/Kvantum/kvantum.kvconfig
+[General]
+theme=WhiteSur-dark
+EOF
 
     # Force KDE to use Kvantum for Application Style via CLI
-    # (Tries both Plasma 5 and Plasma 6 config tools for compatibility)
     if command -v kwriteconfig6 &> /dev/null; then
         kwriteconfig6 --file kdeglobals --group General --key widgetStyle kvantum
     else
         kwriteconfig5 --file kdeglobals --group General --key widgetStyle kvantum
+    fi
+
+    # Set the icon theme explicitly
+    if command -v kwriteconfig6 &> /dev/null; then
+        kwriteconfig6 --file kdeglobals --group Icons --key Theme WhiteSur-dark
+    else
+        kwriteconfig5 --file kdeglobals --group Icons --key Theme WhiteSur-dark
     fi
 
     echo "Resetting desktop layout to apply changes..."
@@ -138,6 +155,7 @@ if [[ "$answer" == "y" ]]; then
     
     # Clean up installation files
     rm -rf /tmp/WhiteSur-kde
+    rm -rf /tmp/WhiteSur-icon-theme
     echo "Desktop customization complete!"
 else
     echo "Skipping desktop customization."
