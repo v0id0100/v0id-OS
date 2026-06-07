@@ -1,6 +1,6 @@
 # vArch-OS
 
-### Presenting v0id-OS
+### Presenting vArch-OS
 
 Encrypted
 

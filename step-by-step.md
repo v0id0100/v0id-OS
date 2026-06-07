@@ -216,7 +216,7 @@ mount /dev/sdx1 /mnt/boot
 # If you have Intel then install intel-ucode 
 # If you have AMD then install: amd-ucode
 
-pacstrap -K /mnt base linux linux-firmware intel-ucode nano vim man-pages man-db bluez-deprecated-tools bluez-utils bluez networkmanager sof-firmware sudo grub efibootmgr
+pacstrap -K /mnt base linux linux-firmware intel-ucode nano vim man-pages man-db bluez-deprecated-tools bluez-utils bluez networkmanager sof-firmware sudo grub efibootmgr git
 ```
 - You are invited you install you own tools, this is only an initial ones.
 

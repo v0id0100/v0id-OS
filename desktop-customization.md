@@ -80,3 +80,23 @@ sudo pacman -S kde-applications
 
 # On the third one choose 30 (English)
 ```
+- Login manager:
+```bash
+sudo pacman -S plasma-login-manager && sudo systemctl enable plasmalogin
+```
+
+- Reiniciar amb ***"reboot"***
+
+---
+
+### Initial Interface:
+
+- You can do this with the script: [init-install.sh](init-install.sh)
+
+![alt text](./images/.image7.png)
+
+![alt text](./images/.image8.png)
+
+### Custom the interface:
+
+- There is some customizations you could do with the script: [init install](init-install.sh)
