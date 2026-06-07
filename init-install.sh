@@ -43,6 +43,9 @@ echo "--------------------------------------------------"
 read -p "Do you want to install terminal customizations (zsh, Oh My Zsh, and plugins)? (y/n): " answer
 
 if [[ "$answer" == "y" ]]; then
+    echo "Changin distro name..."
+    sed -i 's/GRUB_DISTRIBUTOR="vArch"/GRUB_DISTRIBUTOR="vArch"/' /etc/default/grub
+
     echo "Proceeding with terminal customizations..."
     echo "Installing zsh..."
     sudo pacman -S --noconfirm zsh
@@ -152,7 +155,16 @@ EOF
 
     echo "Resetting desktop layout to apply changes..."
     plasmashell --replace & disown
+
+    echo "Changing Application Style to 'Oxygen'..."
+    kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle "oxygen"
+    busctl --user call org.kde.KWin /KWin org.kde.KWin reconfigure
+
+    echo "Changing Splash Screen to 'Breeze'..."
+    kwriteconfig6 --file ksplashrc --group KSplash --key Theme "org.kde.breeze.desktop"
+    kwriteconfig6 --file ksplashrc --group KSplash --key Engine "KSplashQML"
     
+    echo "Cleaning up desktop configuration files to ensure a fresh start..."
     # Clean up installation files
     rm -rf /tmp/WhiteSur-kde
     rm -rf /tmp/WhiteSur-icon-theme
@@ -163,3 +175,12 @@ fi
 
 echo "--------------------------------------------------"
 echo "vArch Linux setup script finished! Please restart your system to ensure all changes take effect."
+
+read -p "Prepare to reboot now? (y/n): " answer
+
+if [[ "$answer" == "y" ]]; then
+    echo "Rebooting now..."
+    sudo reboot
+else
+    echo "Please remember to reboot your system as soon as possible to apply all changes."
+fi
