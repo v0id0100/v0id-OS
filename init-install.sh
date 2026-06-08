@@ -163,6 +163,17 @@ EOF
     echo "Changing Splash Screen to 'Breeze'..."
     kwriteconfig6 --file ksplashrc --group KSplash --key Theme "org.kde.breeze.desktop"
     kwriteconfig6 --file ksplashrc --group KSplash --key Engine "KSplashQML"
+
+    echo "Changing Application Launcher Icon to 'Breeze'..."
+    sed -i 's|^icon=.*|icon=/usr/share/icons/breeze/places/16/start-here-kde-plasma.svg|g' ~/.config/plasma-org.kde.plasma.desktop-appletsrc
+
+    echo "Cleaning up icon and plasma caches to ensure the new theme is applied correctly..."
+    rm -rf ~/.cache/ico*
+    rm -rf ~/.cache/plasma*
+    systemctl --user restart plasma-plasmashell.service
+
+    echo "Pinning essential apps to the panel..."
+    bash add-apps-to-panel.sh
     
     echo "Cleaning up desktop configuration files to ensure a fresh start..."
     # Clean up installation files
