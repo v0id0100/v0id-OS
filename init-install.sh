@@ -178,10 +178,6 @@ EOF
         kwriteconfig5 --file kdeglobals --group Icons --key Theme WhiteSur-dark
     fi
 
-    echo "Resetting desktop layout to apply changes..."
-    plasmashell --replace & disown
-    sleep 4
-
     echo "Changing Application Style to 'Oxygen'..."
     kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle "oxygen"
     busctl --user call org.kde.KWin /KWin org.kde.KWin reconfigure
@@ -191,20 +187,71 @@ EOF
     kwriteconfig6 --file ksplashrc --group KSplash --key Engine "KSplashQML"
 
     echo "Changing Application Launcher Icon to 'Breeze'..."
-    sed -i 's|^icon=.*|icon=/usr/share/icons/breeze/places/16/start-here-kde-plasma.svg|g' ~/.config/plasma-org.kde.plasma.desktop-appletsrc
+    sed -i '37a\icon=start-here-kde-plasma' ~/.config/plasma-org.kde.plasma.desktop-appletsrc
 
-    echo "Resetting desktop layout to apply changes..."
     plasmashell --replace & disown
     sleep 4
 
     echo "Cleaning up icon and plasma caches to ensure the new theme is applied correctly..."
     rm -rf ~/.cache/ico*
     rm -rf ~/.cache/plasma*
-    systemctl --user restart plasma-plasmashell.service
 
     echo "Pinning essential apps to the panel..."
     cd $SCRIPT_DIR
     bash add-apps-to-panel.sh
+
+    echo "Installing and setting yet another magic lamp effect..."
+    
+    # Using --needed ensures groups like base-devel install cleanly without prompts
+    sudo pacman -S --needed \
+        base-devel \
+        cmake \
+        extra-cmake-modules \
+        kwin \
+        kconfig \
+        kconfigwidgets \
+        kcmutils \
+        kcoreaddons \
+        kwindowsystem \
+        qt6-base \
+        libdrm --noconfirm
+
+    # Clean up any leftover previous builds first, then clone
+    rm -rf /tmp/kwin-effects-yet-another-magic-lamp-reloaded
+    cd /tmp
+    git clone https://github.com/Si13n7/kwin-effects-yet-another-magic-lamp-reloaded.git
+    
+    cd kwin-effects-yet-another-magic-lamp-reloaded
+    mkdir build && cd build
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr
+    make
+    sudo make install
+
+    echo "Applying the new magic lamp effect..."
+    
+    # 1. Activate the compiled reloaded binary plugin by its exact metadata ID
+    kwriteconfig6 --file kwinrc --group Plugins --key yamilEnabled true
+    
+    # 2. Configure the specific window animation event group for Plasma 6
+    # This directly forces the "Minimizar ventana" dropdown in image_1a9a41.png to select it
+    kwriteconfig6 --file kwinrc --group Effect-yamil --key Minimize true
+    
+    # 3. Explicitly disable competing native options (Aplastar / Lámpara mágica)
+    kwriteconfig6 --file kwinrc --group Plugins --key squashEnabled false
+    kwriteconfig6 --file kwinrc --group Plugins --key magiclampEnabled false
+    
+    echo "Updating KWin config cache..."
+    # Clear the local cache so KWin parses the freshly compiled binary immediately
+    rm -rf ~/.cache/kwin
+    
+    # 4. Push the live reload to the desktop compositor
+    busctl --user call org.kde.KWin /KWin org.kde.KWin reconfigure
+    
+    # Clean up the build files from /tmp
+    cd ~
+    rm -rf /tmp/kwin-effects-yet-another-magic-lamp-reloaded
     
     echo "Cleaning up desktop configuration files to ensure a fresh start..."
     # Clean up installation files
