@@ -1,11 +1,13 @@
 #!/bin/bash
 
+
+SCRIPT_DIR=$(pwd)
 # Welcome:
 echo "Hello and welcome to the vArch Linux setup script! This script will help you customize your desktop environment and install some useful applications. Let's get started!"
 echo "--------------------------------------------------"
 
 # 1. Set up user:
-read -p "Do you want to set up a new user and delete the default 'vArch' user? (y/n): " answer
+read -p "Do you want to set up a new user? (y/n): " answer
 
 if [[ "$answer" == "y" ]]; then
     echo "Proceeding with user setup..."
@@ -15,10 +17,7 @@ if [[ "$answer" == "y" ]]; then
 
     # Set password for the new user
     sudo passwd "$new_username"
-
-    # Delete the default user
-    sudo userdel -r vArch
-    echo "Default user 'vArch' deleted."
+    echo "User $new_username setup complete."
 else
     echo "Skipping user setup."
 fi
@@ -44,7 +43,8 @@ read -p "Do you want to install terminal customizations (zsh, Oh My Zsh, and plu
 
 if [[ "$answer" == "y" ]]; then
     echo "Changin distro name..."
-    sed -i 's/GRUB_DISTRIBUTOR="vArch"/GRUB_DISTRIBUTOR="vArch"/' /etc/default/grub
+    sudo sed -i 's/GRUB_DISTRIBUTOR="Arch"/GRUB_DISTRIBUTOR="vArch"/' /etc/default/grub
+    echo "Grub distributor name set to vArch."
 
     echo "Proceeding with terminal customizations..."
     echo "Installing zsh..."
@@ -63,6 +63,25 @@ if [[ "$answer" == "y" ]]; then
     echo "Configuring .zshrc..."
     sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting)/' ~/.zshrc
     sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="bira"/' ~/.zshrc
+
+    # Ensure current user shell environment is correct
+    sudo cp ~/.zshrc /home/"$USER"/.zshrc 2>/dev/null || true
+    sudo usermod --shell /bin/zsh "$USER"
+
+    # For root too
+    sudo cp ~/.zshrc /root/.zshrc
+    sudo cp -r ~/.oh-my-zsh /root/.oh-my-zsh
+    sudo usermod --shell /bin/zsh root
+
+    # Set up .zshrc AND the complete .oh-my-zsh core engine to new user if created
+    if [[ -v new_username && -n "$new_username" ]]; then
+        sudo cp ~/.zshrc /home/"$new_username"/.zshrc
+        sudo cp -r ~/.oh-my-zsh /home/"$new_username"/.oh-my-zsh
+        # Correct ownership permissions so the new user actually owns their configs
+        sudo chown -R "$new_username":"$new_username" /home/"$new_username"/.zshrc /home/"$new_username"/.oh-my-zsh
+        sudo usermod --shell /bin/zsh "$new_username"
+    fi
+    echo "Terminal customizations complete!"
 else
     echo "Skipping terminal customizations."
 fi
@@ -92,6 +111,8 @@ if [[ "$answer" == "y" ]]; then
 
     echo "Installing Visual Studio Code..."
     sudo pacman -S --noconfirm code
+
+    echo "Custom apps installation complete!"
 else
     echo "Skipping custom apps installation."
 fi
@@ -113,14 +134,17 @@ if [[ "$answer" == "y" ]]; then
     cd /tmp/WhiteSur-icon-theme
     echo "Installing WhiteSur icons..."
     ./install.sh
+    echo "WhiteSur icons installed successfully!"
     
     # --- 2. Install WhiteSur KDE Desktop Theme ---
     echo "Downloading WhiteSur Apple Theme..."
     git clone https://github.com/vinceliuice/WhiteSur-kde.git /tmp/WhiteSur-kde
     cd /tmp/WhiteSur-kde
+    echo "Apple theme downloaded successfully!"
 
     echo "Installing WhiteSur dependencies..."
     sudo pacman -S --needed sassc kvantum-qt5 kvantum --noconfirm
+    echo "Dependencies installed successfully!"
     
     echo "Installing WhiteSur theme..."
     ./install.sh
@@ -128,6 +152,7 @@ if [[ "$answer" == "y" ]]; then
     echo "Applying WhiteSur Dark Global Theme..."
     plasma-apply-lookandfeel -a com.github.vinceliuice.WhiteSur-dark --resetLayout
     plasma-apply-colorscheme WhiteSurDark
+    echo "WhiteSur theme applied successfully!"
     
     # --- 3. Headless Kvantum Configuration (No GUI popups!) ---
     echo "Configuring Kvantum application style cleanly..."
@@ -155,6 +180,7 @@ EOF
 
     echo "Resetting desktop layout to apply changes..."
     plasmashell --replace & disown
+    sleep 4
 
     echo "Changing Application Style to 'Oxygen'..."
     kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle "oxygen"
@@ -167,12 +193,17 @@ EOF
     echo "Changing Application Launcher Icon to 'Breeze'..."
     sed -i 's|^icon=.*|icon=/usr/share/icons/breeze/places/16/start-here-kde-plasma.svg|g' ~/.config/plasma-org.kde.plasma.desktop-appletsrc
 
+    echo "Resetting desktop layout to apply changes..."
+    plasmashell --replace & disown
+    sleep 4
+
     echo "Cleaning up icon and plasma caches to ensure the new theme is applied correctly..."
     rm -rf ~/.cache/ico*
     rm -rf ~/.cache/plasma*
     systemctl --user restart plasma-plasmashell.service
 
     echo "Pinning essential apps to the panel..."
+    cd $SCRIPT_DIR
     bash add-apps-to-panel.sh
     
     echo "Cleaning up desktop configuration files to ensure a fresh start..."
@@ -180,6 +211,10 @@ EOF
     rm -rf /tmp/WhiteSur-kde
     rm -rf /tmp/WhiteSur-icon-theme
     echo "Desktop customization complete!"
+
+    echo "Resetting desktop layout to apply changes..."
+    plasmashell --replace & disown
+    sleep 4
 else
     echo "Skipping desktop customization."
 fi

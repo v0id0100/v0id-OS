@@ -74,11 +74,13 @@ sudo pacman -S plasma-meta
 ```bash
 sudo pacman -S kde-applications
 
-# On the first question choose 1.
+# On the first option select = ALL (ENTER)
 
-# On the second one choose 1.
+# On the second question choose 1.
 
-# On the third one choose 30 (English)
+# On the third one choose 1.
+
+# On the fourth one choose 30 (English)
 ```
 - Login manager:
 ```bash

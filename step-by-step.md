@@ -363,6 +363,7 @@ blkid
 ```
 
 - Exemple output:
+
 ![alt text](./images/.image2.png)
 
 - <h2>You have to set the UUID (NOT THE PARTUUID) of the TYPE "crypto_LUKS", VERY IMPORTANT</h2>
