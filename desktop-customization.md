@@ -30,6 +30,12 @@ ping -c 3 google.com
 
 ---
 
+### Starting bluetooth modules:
+```bash
+sudo modprobe btusb && sudo systemctl start blueetooth && sudo systemctl enable blueetooth
+
+---
+
 ### Installing video drivers:
 
 - First you need to edit you pacman settings file:
@@ -93,7 +99,7 @@ sudo pacman -S plasma-login-manager && sudo systemctl enable plasmalogin
 
 ### Initial Interface:
 
-- You can do this with the script: [init-install.sh](init-install.sh)
+- The initial interface is thisone:
 
 ![alt text](./images/.image7.png)
 
@@ -101,4 +107,73 @@ sudo pacman -S plasma-login-manager && sudo systemctl enable plasmalogin
 
 ### Custom the interface:
 
-- There is some customizations you could do with the script: [init install](init-install.sh)
+- First I installed some things:
+```bash
+sudo pacman -S zsh git --noconfirm; \
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended; \
+git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions; \
+git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search; \
+git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting; \
+sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting)/' ~/.zshrc; \
+echo -e "\nbindkey '^[[A' history-substring-search-up\nbindkey '^[[B' history-substring-search-down" >> ~/.zshrc; \
+sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="bira"/' ~/.zshrc; \
+sudo pacman -S thunderbird firefox code virtualbox virtualbox-host-dkms timeshift proton-vpn-gtk-app --noconfirm; \
+sudo pacman -Rns falkon --noconfirm; \
+sudo pacman -S \
+    base-devel \
+    cmake \
+    extra-cmake-modules \
+    kwin \
+    kconfig \
+    kconfigwidgets \
+    kcmutils \
+    kcoreaddons \
+    kwindowsystem \
+    qt6-base \
+    libdrm; \
+git clone https://github.com/Si13n7/kwin-effects-yet-another-magic-lamp-reloaded.git
+cd kwin-effects-yet-another-magic-lamp-reloaded
+mkdir build && cd build
+cmake .. \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr
+make
+sudo make install; \
+exec zsh
+```
+
+- Once this script executed load the effect:
+![alt text](./images/.image-16.png)
+
+VIDEO AQUI
+
+- I selected these themes:
+![alt text](./images/.image-9.png)
+
+- And installed those:
+![alt text](./images/.image-10.png)
+
+- It is taking shape:
+![alt text](./images/.image-11.png)
+
+![alt text](./images/.image-12.png)
+
+- Add some plugins:
+    - Gemini (must set your Google API in config (right click on it))
+    - CPU cat
+    - Bluetooth
+    - Apps Interface
+
+- Install web app hub to use web like apps. Ex: Netflix.
+
+![alt text](./images/.image-13.png)
+
+- Final shape:
+
+<h2>Before:</h2>
+
+![alt text](./images/.image7.png)
+
+<h2>After:</h2>
+
+![alt text](./images/.image-14.png)
